@@ -1,0 +1,29 @@
+services:
+  tools:
+    build: .
+    container_name: devsecops-tools
+    volumes:
+      - .:/workspace
+    tty: true
+    stdin_open: true
+
+  juice-shop:
+    image: bkimminich/juice-shop
+    container_name: juice-shop
+    ports:
+      - "3000:3000"
+    restart: always
+
+  zap:
+    image: ghcr.io/zaproxy/zaproxy:stable
+    container_name: owasp-zap
+    command: >
+      zap.sh -daemon -host 0.0.0.0 -port 8090
+      -config api.addrs.addr.name=.*
+      -config api.addrs.addr.regex=true
+      -config api.disablekey=true
+    ports:
+      - "8090:8090"
+    restart: always
+    platform: linux/amd64
+
