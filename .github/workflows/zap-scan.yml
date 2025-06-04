@@ -29,10 +29,9 @@ jobs:
         with:
           target: 'http://localhost:3000'
           cmd_options: '-r zap-report.html'
-          
+
       - name: Upload ZAP Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v3.1.3
         with:
           name: zap-report
           path: zap-report.html
-
