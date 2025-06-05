@@ -23,15 +23,36 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }} # required to push back to repo
+
+      - name: Wait for Juice Shop
+        run: |
+          echo "Waiting for Juice Shop..."
+          sleep 15
+          curl -I http://localhost:3000
 
       - name: Run OWASP ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.7.0
         with:
           target: 'http://localhost:3000'
-          cmd_options: '-r zap-report.html'
+          cmd_options: '-r zap-report.html -w zap-warnings.md'
 
-      - name: Upload ZAP Report
-        uses: actions/upload-artifact@v3.1.3
+      - name: Comment ZAP Warnings on PR
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
         with:
-          name: zap-report
-          path: zap-report.html
+          path: zap-warnings.md
+
+      - name: Copy ZAP Report to /doc
+        run: |
+          mkdir -p doc
+          mv zap-report.html doc/zap-report.html
+
+      - name: Commit & Push ZAP Report to main/doc
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+          git add doc/zap-report.html
+          git commit -m "Update ZAP report [skip ci]" || echo "No changes to commit"
+          git push origin main
